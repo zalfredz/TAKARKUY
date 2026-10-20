@@ -1,5 +1,6 @@
 import { needsGeminiFallback, parseReceiptText } from "./receipt_parser.mjs";
 import { storagePreview } from "./storage_preview.mjs";
+import { LOCATION_LABELS, expiryLabel, matchesFilter, stockGroup } from "./stock_table.mjs";
 import { createActionKeyStore, locationExpiry, isAISuggestion, correctionConsent } from "./batch_actions.mjs";
 
 const fileInput = document.getElementById("receipt-file");
@@ -22,10 +23,21 @@ let previewUrl = null;
 let workerPromise = null;
 let hasUploaded = false;
 let scanVersion = 0;
+const scanPanel = document.getElementById("scan-panel");
+const manualPanel = document.getElementById("manual-panel");
+const openScan = document.getElementById("open-scan");
+const openManual = document.getElementById("open-manual");
+
+function setPanel(button, panel, open) {
+  panel.hidden = !open;
+  button.setAttribute("aria-expanded", String(open));
+}
 
 function feedback(element, message, isError = false) {
   element.textContent = message;
   element.classList.toggle("error", isError);
+  // Progress text ("…") stays inline; results also get a toast.
+  if (message && !message.endsWith("…")) globalThis.TakarKuy?.toast(message, isError ? "error" : "success");
 }
 
 function draftElements() {
@@ -38,6 +50,7 @@ function refreshDraftCount() {
   receiptCount.textContent = `${count} Item Terdeteksi`;
   draftTableWrap.hidden = !count;
   draftEmpty.hidden = !!count;
+  if (count) setPanel(openScan, scanPanel, true);
   draftEmpty.querySelector("p").textContent = hasUploaded
     ? "Belum ada bahan yang terbaca. Coba unggah struk lain atau tambah baris manual."
     : "Belum ada struk yang diunggah. Unggah struk untuk mendeteksi bahan makanan secara otomatis.";
@@ -406,6 +419,7 @@ saveDraftButton.addEventListener("click", async () => {
   feedback(scanFeedback, "Menyimpan stok…");
   try {
     await saveItems(items, "ocr");
+    globalThis.TakarKuy?.flash(`${items.length} bahan masuk ke Pantry.`);
     window.location.reload();
   } catch (error) {
     feedback(scanFeedback, error.message, true);
@@ -423,12 +437,44 @@ manualForm.addEventListener("submit", async (event) => {
   feedback(manualFeedback, "Menyimpan stok…");
   try {
     await saveItems([item], "manual");
+    globalThis.TakarKuy?.flash(`${item.name} masuk ke Pantry.`);
     window.location.reload();
   } catch (error) {
     feedback(manualFeedback, error.message, true);
     submit.disabled = false;
   }
 });
+
+openScan.addEventListener("click", () => {
+  // Draft rows must stay visible until they are saved or removed.
+  setPanel(openScan, scanPanel, scanPanel.hidden || draftElements().length > 0);
+});
+openManual.addEventListener("click", () => setPanel(openManual, manualPanel, manualPanel.hidden));
+
+const stockRows = () => [...document.querySelectorAll("[data-pantry-item]")];
+const filterChips = [...document.querySelectorAll(".chip[data-filter]")];
+const rowState = (row) => ({group: row.dataset.group, location: row.dataset.location});
+let activeFilter = "all";
+
+function applyFilter() {
+  const rows = stockRows();
+  let visible = 0;
+  for (const row of rows) {
+    row.hidden = !matchesFilter(rowState(row), activeFilter);
+    if (!row.hidden) visible += 1;
+  }
+  for (const chip of filterChips) {
+    chip.setAttribute("aria-pressed", String(chip.dataset.filter === activeFilter));
+    chip.querySelector(".chip-count").textContent = rows.filter((row) => matchesFilter(rowState(row), chip.dataset.filter)).length;
+  }
+  document.getElementById("stock-filter-empty").hidden = !rows.length || visible > 0;
+}
+for (const chip of filterChips) {
+  chip.addEventListener("click", () => {
+    activeFilter = chip.dataset.filter;
+    applyFilter();
+  });
+}
 
 const pantryStorage = JSON.parse(document.getElementById("pantry-storage-data").textContent);
 document.querySelectorAll("[data-pantry-item]").forEach((row) => {
@@ -439,6 +485,12 @@ document.querySelectorAll("[data-pantry-item]").forEach((row) => {
   const expiryInput = row.querySelector("[data-pantry-expiry]");
   const storageFeedback = row.querySelector("[data-storage-feedback]");
   const sourceInput = row.querySelector("[data-expiry-source]");
+  const panel = row.querySelector(".edit-panel");
+  const toggle = row.querySelector(".toggle-edit");
+  toggle.addEventListener("click", () => {
+    panel.hidden = !panel.hidden;
+    toggle.setAttribute("aria-expanded", String(!panel.hidden));
+  });
   let expiryMode = "";
   locationInput.addEventListener("change", () => {
     const estimate = storagePreview(pantryStorage[row.dataset.pantryItem], locationInput.value);
@@ -503,7 +555,20 @@ document.querySelectorAll("[data-pantry-item]").forEach((row) => {
       expiryInput.value = data.estimated_expires_on;
       storageFeedback.textContent = data.message;
       expiryMode = "";
-      feedback(rowFeedback, "Tersimpan");
+      const unitSelect = row.querySelector("[data-edit-unit]");
+      const today = receiptDate.max || new Date().toLocaleDateString("sv-SE", {timeZone: "Asia/Jakarta"});
+      row.dataset.group = stockGroup(data.estimated_expires_on, data.expiry_source, today);
+      row.dataset.location = data.location;
+      row.querySelector(".stock-name-text").textContent = changes.name;
+      row.querySelector(".stock-qty").textContent = `${changes.quantity} ${unitSelect.value === "pack" ? "pack / bungkus" : unitSelect.value}`;
+      deleteButton.dataset.itemName = changes.name;
+      toggle.setAttribute("aria-label", `Ubah ${changes.name}`);
+      row.querySelector(".stock-location").textContent = LOCATION_LABELS[data.location] ?? data.location;
+      const pill = row.querySelector(".stock-expiry");
+      pill.textContent = expiryLabel(data.estimated_expires_on, data.expiry_source, today);
+      pill.className = `pill stock-expiry ${{expired: "pill-bad", soon: "pill-warn", ok: "pill-ok", unknown: "pill-unknown"}[row.dataset.group]}`;
+      applyFilter();
+      feedback(rowFeedback, "Perubahan tersimpan");
     } catch (error) {
       feedback(rowFeedback, error.message || "Gagal menyimpan perubahan.", true);
     } finally {
@@ -540,6 +605,8 @@ document.querySelectorAll("[data-pantry-item]").forEach((row) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal menghapus bahan.");
       row.remove();
+      applyFilter();
+      globalThis.TakarKuy?.toast(`${deleteButton.dataset.itemName} dihapus dari stok.`);
       if (!document.querySelector("[data-pantry-item]")) window.location.reload();
     } catch (error) {
       feedback(rowFeedback, error.message || "Gagal menghapus bahan.", true);

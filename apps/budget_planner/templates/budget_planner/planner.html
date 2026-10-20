@@ -6,20 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Coba perencana anggaran makan TAKARKUY dengan katalog resep dan harga bahan.">
   <title>Rencana Makan — TAKARKUY</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  {% include "partials/head.html" %}
   <link rel="stylesheet" href="{% static 'budget_planner/planner.css' %}">
 </head>
-<body>
-  <header class="site-header">
-    <a class="brand" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}"><span class="brand-icon">✳</span> TAKARKUY</a>
-    <span class="header-label">Smart Budget Meal Planner</span>
-    <a class="back-link" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}">← Kembali ke beranda</a>
-  </header>
+<body class="{% if user.is_authenticated %}has-app-nav{% endif %}">
+  {% include "partials/app_header.html" %}
 
-  <main class="page">
-    <div class="page-heading"><div><p class="kicker">SIMULASI</p><h1>Simulasi Meal Plan</h1></div></div>
+  <main id="main" class="page">
+    <div class="page-heading"><div><p class="kicker">PLANNER</p><h1>Rencana Makan</h1><p class="lead">Isi empat langkah di bawah, lalu tekan Buat Rencana Makan. Tidak ada yang tersimpan sebelum kamu menyimpannya.</p></div></div>
     {% if user.is_authenticated %}<nav class="plan-nav" aria-label="Navigasi rencana"><a href="{% url 'planner' %}?new=1">+ Rencana Baru</a><a href="#rencana-saya">Rencana Saya</a>{% if active_draft %}<a href="{% url 'planner' %}?plan={{ active_draft.pk }}#hasil">Draft Terakhir</a>{% endif %}</nav>{% endif %}
     <p id="plan-feedback" class="plan-feedback" role="status" aria-live="polite"></p>
 
@@ -31,8 +25,9 @@
     </aside>
     {% endif %}
 
+    <div class="planner-layout">
     <section class="input-card" aria-labelledby="input-title">
-      <div class="section-heading"><div><h2 id="input-title">Atur Parameter Belanja &amp; Makan</h2></div><span class="auto-label">⚡ Terkalkulasi Otomatis</span></div>
+      <div class="section-heading"><div><h2 id="input-title">Atur Parameter Belanja &amp; Makan</h2></div></div>
       <form method="post" action="{% url 'planner' %}#hasil" novalidate>
         {% csrf_token %}
         {{ form.allergens }}
@@ -46,7 +41,7 @@
         {% endif %}
         {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
         <div class="input-grid">
-          <div class="field budget-field"><label for="{{ form.budget.id_for_label }}"><span class="field-number">01</span> Budget Belanja</label><div class="currency-input"><span>Rp</span>{{ form.budget }}</div>{{ form.budget.errors }}</div>
+          <div class="field budget-field"><label for="{{ form.budget.id_for_label }}"><span class="field-number">01</span> Budget Belanja</label><div class="currency-input"><span>Rp</span>{{ form.budget }}</div>{{ form.budget.errors }}<p class="field-note">Uang belanja untuk seluruh rencana. Stok Pantry milikmu dipakai lebih dulu, jadi belanja bisa lebih kecil.</p></div>
           <div class="planning-fields"><div class="field"><label for="{{ form.days.id_for_label }}"><span class="field-number">02</span> Durasi Rencana Makan</label><div class="number-input">{{ form.days }}<span>hari</span></div>{{ form.days.errors }}<p class="field-note">Pilih durasi antara 1–7 hari.</p></div><div class="field"><label for="{{ form.servings.id_for_label }}"><span class="field-number">03</span> Jumlah Orang / Porsi</label><div class="number-input">{{ form.servings }}<span>orang</span></div>{{ form.servings.errors }}<p class="field-note">Bisa diisi untuk 1–10 porsi.</p></div><fieldset class="field"><legend>Jadwal Makan per Hari</legend><div class="choice-row meal-options">{{ form.meal_types }}</div>{{ form.meal_types.errors }}<p class="field-note">Bisa pilih lebih dari satu</p></fieldset></div>
           <div class="preference-column"><fieldset class="field preference-field"><legend><span class="field-number">04</span> Target gizi &amp; preferensi</legend><div class="choice-row target-row">{{ form.targets }}</div>{{ form.targets.errors }}<p class="field-note">Mode rendah kalori membatasi tiga waktu makan hingga 1.150 kkal per orang. Ini ambang simulasi, bukan anjuran kebutuhan harian.</p><label class="sub-label" for="{{ form.rice.id_for_label }}">Nasi untuk Lauk Siang/Malam</label><div class="excluded-input">{{ form.rice }}</div>{{ form.rice.errors }}<p class="field-note">Lauk tanpa karbohidrat diberi 80 g beras (±1 piring nasi) per orang, ikut dihitung di biaya dan gizi. Otomatis: aktif untuk 1–2 orang, kecuali target rendah kalori.</p><label class="sub-label" for="{{ form.exclude_ingredients.id_for_label }}">Bahan yang Ingin Dihindari (Opsional)</label><div class="excluded-input">{{ form.exclude_ingredients }}</div>{{ form.exclude_ingredients.errors }}<p class="field-note">Bukan filter alergi. Atur alergi melalui Profil &amp; Preferensi jika sudah login.</p></fieldset><button type="submit" class="calculate-button"{% if trial and trial.remaining == 0 %} disabled{% endif %}>{% if plan.status == 'saved' %}Pratinjau Perubahan{% else %}Buat Rencana Makan{% endif %} <span aria-hidden="true">→</span></button></div>
         </div>
@@ -98,9 +93,10 @@
         </div>
         {% endif %}
       {% else %}
-        <div class="empty-state"><span aria-hidden="true">✦</span><h2>Rencanamu akan muncul di sini</h2></div>
+        <div class="empty-state"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/></svg></span><h2>Rencanamu akan muncul di sini</h2><p>Atur budget dan jadwal makan, lalu tekan Buat Rencana Makan.</p></div>
       {% endif %}
     </section>
+    </div>
     {% if user.is_authenticated %}{% include 'budget_planner/saved_plans.html' %}{% include 'budget_planner/preview_dialog.html' %}{% endif %}
   </main>
   {% if user.is_authenticated %}

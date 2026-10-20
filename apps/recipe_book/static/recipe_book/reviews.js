@@ -11,8 +11,9 @@ if (form) {
         headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value}, body: JSON.stringify(payload)});
       let data; try { data = await response.json(); } catch { throw new Error('Sesi atau server bermasalah. Muat ulang halaman.'); }
       if (!response.ok) throw new Error(data.error || 'Ulasan gagal disimpan.');
+      globalThis.TakarKuy?.flash(action === 'delete' ? 'Ulasan dihapus.' : 'Ulasan tersimpan.');
       location.reload();
-    } catch (error) { output.textContent = error.message; buttons.forEach(b => b.disabled = false); }
+    } catch (error) { output.textContent = error.message; globalThis.TakarKuy?.toast(error.message, 'error'); buttons.forEach(b => b.disabled = false); }
   }
   form.addEventListener('submit', event => { event.preventDefault(); submit('save'); });
   document.querySelector('#delete-review')?.addEventListener('click', () => {

@@ -111,8 +111,8 @@ class DashboardTests(TestCase):
         # A plan starting later is not active today, but its days show in the 7-day panel.
         self.assertNotIn("Belum mulai", {plan.title for plan in response.context["plans"]})
         self.assertContains(response, "Belum mulai", count=3)
-        # Today: one meal from each active plan (2). The 7-day panel adds the next
-        # days of those plans (2 + 2) and of "Belum mulai" (3); drafts and other
+        # Today: one meal from each active plan (2). The day panels (today..+6) add the
+        # next days of those plans (2 + 2) and of "Belum mulai" (3); drafts and other
         # accounts never appear.
         self.assertContains(response, "Nama snapshot", count=9)
         self.assertNotContains(response, "Rencana tetangga")
@@ -226,6 +226,15 @@ class DashboardWeekTests(TestCase):
         self.plan(title="Rencana C", offset=3)
         with self.assertNumQueries(baseline):
             dashboard_data(self.user)
+
+    def test_calendar_renders_seven_day_tabs_with_empty_state(self):
+        response = self.client.get(reverse("dashboard"))
+        self.assertContains(response, 'role="tablist"')
+        self.assertContains(response, 'role="tab"', count=7)
+        self.assertContains(response, 'role="tabpanel"', count=7)
+        self.assertContains(response, "Belum ada rencana untuk hari ini")
+        self.assertContains(response, 'href="/planner/?new=1"')
+        self.assertContains(response, 'id="open-market"')
 
     def test_week_panel_names_the_plan_and_marks_skipped_meals(self):
         plan = self.plan(title="Bekal Kos", offset=1)

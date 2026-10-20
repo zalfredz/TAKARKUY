@@ -153,9 +153,9 @@ class AccountFlowTests(TestCase):
         response = self.client.get(reverse("dashboard"))
         self.assertContains(response, "Hai, Dina!")
         for name, label in (
-            ("planner", "Budget Meal Planner"),
-            ("pantry", "Smart Pantry"),
-            ("recipes", "Recipe Book"),
+            ("planner", "Planner"),
+            ("pantry", "Pantry"),
+            ("recipes", "Resep"),
         ):
             self.assertContains(response, f'href="{reverse(name)}"')
             self.assertContains(response, label)
@@ -168,19 +168,21 @@ class AccountFlowTests(TestCase):
         for page_name in ("planner",):
             with self.subTest(page=page_name, authenticated=False):
                 response = self.client.get(reverse(page_name))
-                self.assertContains(response, f'href="{reverse("landing")}"', count=2)
+                self.assertContains(response, f'href="{reverse("landing")}"', count=1)
 
         self.client.post(reverse("signup"), self.signup_data())
         for page_name in ("planner", "pantry", "recipes"):
             with self.subTest(page=page_name, authenticated=True):
                 response = self.client.get(reverse(page_name))
-                self.assertContains(response, f'href="{reverse("dashboard")}"', count=2)
+                self.assertContains(response, f'href="{reverse("dashboard")}"', count=1)
+                self.assertNotContains(response, ">Beranda</a>")
 
     def test_recipes_keeps_header_and_shows_recipe_book(self):
         self.client.post(reverse("signup"), self.signup_data())
         response = self.client.get(reverse("recipes"))
         self.assertContains(response, "TAKARKUY")
-        self.assertContains(response, "Kembali ke beranda")
+        self.assertContains(response, 'aria-label="Navigasi utama"')
+        self.assertContains(response, 'aria-current="page"')
         self.assertContains(response, "Resep favorit")
         self.assertContains(response, "Riwayat masak")
 

@@ -10,11 +10,11 @@ async function post(url, payload) {
   if (!response.ok) throw new Error(data.error || 'Permintaan gagal.');
   return data;
 }
-function showError(error) { message.textContent = error.message; message.hidden = false; }
+function showError(error) { message.textContent = error.message; message.hidden = false; globalThis.TakarKuy?.toast(error.message, 'error'); }
 for (const button of document.querySelectorAll('[data-remove-favorite]')) {
   button.addEventListener('click', async () => {
     button.disabled = true;
-    try { await post(button.dataset.url, {recipe_code: button.dataset.removeFavorite, favorite: false}); location.reload(); }
+    try { await post(button.dataset.url, {recipe_code: button.dataset.removeFavorite, favorite: false}); globalThis.TakarKuy?.flash('Dihapus dari favorit.'); location.reload(); }
     catch (error) { showError(error); button.disabled = false; }
   });
 }
@@ -25,6 +25,7 @@ if (detail) {
     try {
       await post(detail.dataset.favoriteUrl, {recipe_code: detail.dataset.code,
         favorite: favorite.getAttribute('aria-pressed') !== 'true'});
+      globalThis.TakarKuy?.flash(favorite.getAttribute('aria-pressed') === 'true' ? 'Dihapus dari favorit.' : 'Disimpan ke favorit.');
       location.reload();
     } catch (error) { showError(error); favorite.disabled = false; }
   });
@@ -97,6 +98,7 @@ if (detail) {
     for (const input of form.querySelectorAll('input,button')) input.disabled = true;
     try {
       await post(detail.dataset.cookUrl, {...approved, operation_key: operationKey});
+      globalThis.TakarKuy?.flash('Tercatat sudah masak. Stok Pantry sudah dikurangi.');
       location.reload();
     } catch (error) {
       errorText.textContent = error.message;
@@ -112,8 +114,13 @@ if (detail) {
       try {
         await post(slotStatus.dataset.url, {planned_meal: Number(detail.dataset.slot),
           version: Number(detail.dataset.version), status: slotStatus.dataset.status});
+        globalThis.TakarKuy?.flash(slotStatus.dataset.status === 'skipped' ? 'Menu dilewati. Bisa dibatalkan kapan saja.' : 'Menu kembali ke jadwal.');
         location.reload();
       } catch (error) { showError(error); slotStatus.disabled = false; }
     });
   }
 }
+// Chip filters apply immediately; the text search still uses its own Cari button.
+document.querySelector('#recipe-filters')?.addEventListener('change', event => {
+  if (event.target?.type === 'radio' || event.target?.type === 'checkbox') event.currentTarget.requestSubmit();
+});

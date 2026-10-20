@@ -145,6 +145,7 @@ def book_page(request):
         max_price = int(request.GET.get("max_price", ""))
     except ValueError:
         max_price = None
+    costs = None
     if max_price in PRICE_LIMITS:
         codes = set(query.values_list("pk", flat=True))
         costs = recipe_costs(profile.servings, codes)
@@ -229,6 +230,18 @@ def book_page(request):
         ),
         7,
     ).get_page(request.GET.get("history_page"))
+    show_detail = "recipe" in request.GET or "slot" in request.GET
+    if show_detail:
+        card_costs = {}
+    elif costs is not None:
+        card_costs = costs
+    else:
+        card_costs = recipe_costs(profile.servings, [r.pk for r in page])
+    for recipe in page:
+        recipe.card_cost = card_costs.get(recipe.pk)
+    back_params = request.GET.copy()
+    for key in ("recipe", "slot", "review_page", "history_page"):
+        back_params.pop(key, None)
     params = request.GET.copy()
     params.pop("page", None)
     params.pop("slot", None)
@@ -242,6 +255,10 @@ def book_page(request):
         "recipe_book.html",
         {
             "recipes": page,
+            "card_costs": card_costs,
+            "card_servings": profile.servings,
+            "show_detail": show_detail,
+            "back_params": back_params.urlencode(),
             "selected": selected,
             "detail": detail,
             "slot": slot,

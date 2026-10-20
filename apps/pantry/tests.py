@@ -65,6 +65,27 @@ class PantryFlowTests(TestCase):
         self.assertIn("data-storage-feedback", expiry_cell)
         self.assertEqual(PantryItem.objects.get().source, "manual")
 
+    def test_stock_table_has_chips_empty_message_and_edit_panel_in_row(self):
+        self.post_items([self.item], source="manual")
+        today = timezone.localdate(timezone=ZoneInfo("Asia/Jakarta"))
+        PantryItem.objects.update(
+            estimated_expires_on=today + timedelta(days=2), expiry_source="manual"
+        )
+        html = self.client.get(reverse("pantry")).content.decode()
+        self.assertIn('data-filter="soon"', html)
+        self.assertIn('id="stock-filter-empty"', html)
+        row = html.split('<tr class="stock-row" role="row" data-pantry-item', 1)[1].split(
+            "</tr>", 1
+        )[0]
+        self.assertIn('data-group="soon"', row)
+        for marker in (
+            "data-pantry-expiry",
+            "data-pantry-location",
+            "save-pantry-details",
+            'id="edit-',
+        ):
+            self.assertIn(marker, row)
+
     def test_ocr_can_save_without_category_location_or_expiry(self):
         simple_item = {"name": "Tahu Putih", "quantity": "2", "unit": "kotak"}
         response = self.post_items([simple_item])

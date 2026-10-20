@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.views import LoginView
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
@@ -10,7 +9,7 @@ from django.views.decorators.http import require_http_methods
 
 from apps.budget_planner.services import adopt_guest_result
 
-from .forms import AccountDetailsForm, PreferenceForm, SignUpForm
+from .forms import AccountDetailsForm, PreferenceForm, ProfilePasswordForm, SignUpForm
 from .models import UserProfile
 
 
@@ -72,14 +71,14 @@ def profile_view(request):
             "version": profile.version,
         }
     )
-    password = PasswordChangeForm(request.user)
+    password = ProfilePasswordForm(request.user)
     status = 200
     if request.method == "POST":
         action = request.POST.get("action")
         active = {
             "account": AccountDetailsForm,
             "preferences": PreferenceForm,
-            "password": PasswordChangeForm,
+            "password": ProfilePasswordForm,
         }
         if action not in active:
             response = render(
@@ -100,7 +99,7 @@ def profile_view(request):
         elif action == "preferences":
             preferences = form = PreferenceForm(request.POST)
         else:
-            password = form = PasswordChangeForm(request.user, request.POST)
+            password = form = ProfilePasswordForm(request.user, request.POST)
         if form.is_valid():
             try:
                 with transaction.atomic():
@@ -126,7 +125,7 @@ def profile_view(request):
                             setattr(current, field, form.cleaned_data[field])
                         current.avoided_ingredients.set(form.cleaned_data["avoided_ingredients"])
                     else:
-                        password = PasswordChangeForm(locked, request.POST)
+                        password = ProfilePasswordForm(locked, request.POST)
                         if not password.is_valid():
                             raise ValueError("Kata sandi berubah. Muat ulang dan coba kembali.")
                         locked = password.save()

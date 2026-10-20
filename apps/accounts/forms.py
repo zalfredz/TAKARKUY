@@ -2,7 +2,7 @@ import re
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
@@ -203,7 +203,7 @@ class PreferenceForm(forms.Form):
         queryset=Ingredient.objects.order_by("name"),
         required=False,
         label="Bahan yang ingin dihindari (bukan alergi)",
-        widget=forms.SelectMultiple(attrs={"size": 8}),
+        widget=forms.CheckboxSelectMultiple,
     )
     version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
 
@@ -220,3 +220,10 @@ class PreferenceForm(forms.Form):
                 "Pilih maksimal 10 bahan (total nama maksimal 250 karakter)."
             )
         return values
+
+
+class ProfilePasswordForm(PasswordChangeForm):
+    # Django autofocuses the old password, which scrolls the profile page past account details.
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["old_password"].widget.attrs.pop("autofocus", None)

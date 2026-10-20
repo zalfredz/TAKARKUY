@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 from decimal import Decimal
+from unittest.mock import patch
 from uuid import uuid4
 
 from django.contrib.auth import get_user_model
@@ -18,7 +19,7 @@ from apps.pantry.models import PantryItem, PantryMovement, PantryOperation
 from apps.pantry.services import StockError, plan_consumption
 
 from .models import CookingHistory, RecipeFavorite
-from .services import cook, preview_cooking, recipe_query, stock_matches
+from .services import cook, preview_cooking, recipe_costs, recipe_query, stock_matches
 
 
 class CookingTests(TestCase):
@@ -282,6 +283,36 @@ class CookingTests(TestCase):
             self.post("recipes-favorite", {**data, "favorite": False}).status_code, 200
         )
 
+    def test_list_view_shows_cards_without_detail(self):
+        response = self.client.get(reverse("recipes"))
+        self.assertNotContains(response, 'id="recipe-detail"')
+        self.assertContains(response, 'class="recipe-card"')
+
+    def test_detail_view_links_back_to_same_filters(self):
+        response = self.client.get(
+            reverse("recipes"), {"meal": "makan_malam", "page": 2, "recipe": self.recipe.pk}
+        )
+        self.assertContains(response, 'href="?meal=makan_malam&amp;page=2"')
+        self.assertContains(response, 'id="recipe-detail"')
+        self.assertNotContains(response, 'class="recipe-card"')
+
+    def test_cards_render_without_prices_when_catalog_has_none(self):
+        with patch("apps.recipe_book.views.recipe_costs", return_value={}):
+            response = self.client.get(reverse("recipes"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="recipe-card"')
+        self.assertNotContains(response, " porsi</")
+
+    def test_detail_request_skips_card_costs(self):
+        with patch("apps.recipe_book.views.recipe_costs", return_value={}) as costs:
+            self.client.get(reverse("recipes"), {"recipe": self.recipe.pk})
+        costs.assert_not_called()
+
+    def test_max_price_list_loads_costs_once(self):
+        with patch("apps.recipe_book.views.recipe_costs", return_value={}) as costs:
+            self.client.get(reverse("recipes"), {"max_price": 50000})
+        self.assertEqual(costs.call_count, 1)
+
     def test_guidance_hidden_by_default_but_direct_link_explains(self):
         self.recipe.instruction_status = "withheld"
         self.recipe.save()
@@ -480,3 +511,25 @@ def get_recipe_for_test(code):
     return Recipe.objects.prefetch_related("recipeingredient_set__ingredient", "recipetag_set").get(
         pk=code
     )
+
+
+class SeededCatalogCostTests(TestCase):
+    fixtures = ["catalog_seed"]
+
+    def test_recipe_costs_prices_recipes_from_several_meal_types(self):
+        codes = []
+        for meal in ("sarapan", "makan_siang"):
+            recipe = Recipe.objects.filter(meal_type=meal, is_plannable=True).first()
+            codes.append(recipe.pk)
+        costs = recipe_costs(2, codes)
+        for code in codes:
+            self.assertIsInstance(costs.get(code), int)
+            self.assertGreater(costs[code], 0)
+
+    def test_max_price_filter_and_cards_work_on_seeded_catalog(self):
+        user = get_user_model().objects.create_user("seeded", password="Demo1234!")
+        self.client.force_login(user)
+        response = self.client.get(reverse("recipes"), {"max_price": 50000})
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse("recipes"))
+        self.assertEqual(response.status_code, 200)

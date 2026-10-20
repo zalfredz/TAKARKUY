@@ -4,6 +4,7 @@ import test from "node:test";
 import {runInNewContext} from "node:vm";
 import {createActionKeyStore, locationExpiry, isAISuggestion, correctionConsent} from "../static/pantry/batch_actions.mjs";
 import {storagePreview} from "../static/pantry/storage_preview.mjs";
+import {LOCATION_LABELS, expiryLabel, matchesFilter, stockGroup} from "../static/pantry/stock_table.mjs";
 
 const script = readFileSync(new URL("../static/pantry/pantry.js", import.meta.url), "utf8").replace(/^import .*;\n/gm, "");
 class Element {
@@ -34,17 +35,18 @@ function setup({scan = false} = {}) {
   for (const [selector, value] of Object.entries({"[data-pantry-location]": "suhu_ruang", "[data-pantry-expiry]": "2026-10-06", "[data-expiry-source]": "manual", "[data-edit-name]": "Bayam", "[data-edit-quantity]": "100", "[data-edit-unit]": "g", "[data-edit-category]": "sayur_buah", "[data-edit-ingredient]": "ING-BAYAM"})) row.querySelector(selector).value = value;
   get("pantry-storage-data").textContent = JSON.stringify({1: {options: {freezer: {estimated_expires_on: "2026-10-20", message: "Estimasi"}}}});
   const requests = [];
+  const chips = [new Element()];
   get("receipt-file").dataset.geminiFallback = scan ? "true" : "false";
   get("receipt-file").files = [{type: "image/jpeg", size: 10, name: "receipt.jpg"}];
   get("ocr-unit-options").options = [];
   let next = {ok: true, data: {version: 2, location: "suhu_ruang", expiry_source: "manual", estimated_expires_on: "2026-10-06", message: "Tersimpan"}};
-  const context = {createActionKeyStore, locationExpiry, isAISuggestion, correctionConsent, storagePreview, needsGeminiFallback: () => true, parseReceiptText: () => [{name: "BYM", quantity: 1, unit: "g"}], URL: {createObjectURL: () => "blob:test", revokeObjectURL() {}}, crypto: {randomUUID: () => `key-${requests.length}`},
-    document: {getElementById: get, createElement: () => new Element(), createTextNode: text => ({textContent: text}), querySelector: () => ({value: "csrf"}), querySelectorAll: () => row.removed ? [] : [row]},
+  const context = {LOCATION_LABELS, expiryLabel, matchesFilter, stockGroup, createActionKeyStore, locationExpiry, isAISuggestion, correctionConsent, storagePreview, needsGeminiFallback: () => true, parseReceiptText: () => [{name: "BYM", quantity: 1, unit: "g"}], URL: {createObjectURL: () => "blob:test", revokeObjectURL() {}}, crypto: {randomUUID: () => `key-${requests.length}`},
+    document: {getElementById: get, createElement: () => new Element(), createTextNode: text => ({textContent: text}), querySelector: () => ({value: "csrf"}), querySelectorAll: (selector) => selector === ".chip[data-filter]" ? chips : row.removed ? [] : [row]},
     window: {Tesseract: {createWorker: async () => ({recognize: async () => ({data: {text: "BYM", confidence: 50}})})}, addEventListener() {}, confirm: () => true, location: {reload() {}}},
     fetch: async (url, options) => { requests.push({url, options}); return {ok: next.ok, json: async () => next.data}; },
   };
   runInNewContext(script, context);
-  return {row, requests, get, context, response: (ok, data) => {next = {ok, data};}};
+  return {row, chips, requests, get, context, response: (ok, data) => {next = {ok, data};}};
 }
 
 test("combined photo rows do not request name suggestions and keep raw for consent", () => {
@@ -180,4 +182,31 @@ test("editing a suggested name clears old consent and sends actual edit metadata
   assert.equal(item.user_edited, true);
   assert.equal(item.accepted, false);
   assert.equal(item.ingredient_code, undefined);
+});
+
+test("saving a row updates its summary", async () => {
+  const app = setup();
+  app.get("receipt-date").max = "2026-10-20";
+  app.row.querySelector("[data-edit-name]").value = "Bayam hijau";
+  app.row.querySelector("[data-edit-quantity]").value = "250";
+  app.response(true, {version: 2, location: "kulkas", expiry_source: "estimate", estimated_expires_on: "2026-10-20", message: "Tersimpan"});
+  await app.row.querySelector(".save-pantry-details").trigger();
+  assert.equal(app.row.querySelector(".stock-location").textContent, "Kulkas");
+  assert.equal(app.row.querySelector(".stock-expiry").textContent, "Hari ini");
+  assert.equal(app.row.querySelector(".stock-name-text").textContent, "Bayam hijau");
+  assert.equal(app.row.querySelector(".stock-qty").textContent, "250 g");
+  assert.equal(app.row.querySelector(".delete-pantry-item").dataset.itemName, "Bayam hijau");
+  assert.equal(app.row.dataset.group, "soon");
+  assert.equal(app.row.dataset.location, "kulkas");
+});
+
+test("a filter that matches nothing shows the empty message", async () => {
+  const app = setup();
+  app.row.dataset.group = "ok";
+  app.row.dataset.location = "suhu_ruang";
+  const chip = app.chips[0];
+  chip.dataset.filter = "freezer";
+  await chip.trigger();
+  assert.equal(app.row.hidden, true);
+  assert.equal(app.get("stock-filter-empty").hidden, false);
 });

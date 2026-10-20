@@ -25,6 +25,9 @@ class Ingredient(models.Model):
     allergen_source_url = models.URLField(max_length=600, blank=True)
     allergen_note = models.TextField(blank=True)
 
+    def __str__(self):
+        return self.name
+
     def clean(self):
         from apps.accounts.choices import ALLERGEN_KEYS
 

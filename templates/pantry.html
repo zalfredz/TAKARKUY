@@ -6,59 +6,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Pindai struk dan catat stok dapur TAKARKUY.">
   <title>Smart Pantry — TAKARKUY</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  {% include "partials/head.html" %}
   <style>
-    :root {
-      --ink: #172235;
-      --muted: #56646b;
-      --green: #007653;
-      --green-dark: #005d42;
-      --blue: #eef3ff;
-      --line: #dce6f0;
-      --canvas: #f7f9fe;
-    }
-    *, *::before, *::after { box-sizing: border-box; }
-    body { margin: 0; background: var(--canvas); color: var(--ink); font-family: "DM Sans", Arial, sans-serif; }
-    a { color: inherit; text-decoration: none; }
-    button, input, select { font: inherit; }
+    :root { --blue: var(--soft); }
     button:disabled { cursor: not-allowed; }
-    .site-header {
-      min-height: 74px; padding: 15px clamp(20px, 4vw, 56px); display: flex;
-      align-items: center; justify-content: space-between; gap: 20px;
-      background: #fff; border-bottom: 1px solid #e7edf4;
-    }
-    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--green-dark); font: 800 17px "Plus Jakarta Sans", sans-serif; }
-    .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--green); color: #fff; font-size: 22px; }
-    .back-link { color: var(--green); font-size: 13px; font-weight: 700; }
-    .back-link:hover { text-decoration: underline; }
     .page { max-width: 1380px; margin: 0 auto; padding: 30px 24px 80px; }
     .page-intro { margin-bottom: 18px; }
-    .eyebrow { margin: 0 0 5px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+    .eyebrow { margin: 0 0 5px; color: var(--green); font-size:12px; font-weight: 800; letter-spacing: .12em; }
     h1, h2, p { margin-top: 0; }
-    h1 { margin-bottom: 0; font: 800 26px/1.2 "Plus Jakarta Sans", sans-serif; letter-spacing: -.8px; }
+    h1 { margin-bottom: 0; font: 800 26px/1.2 var(--font); letter-spacing: -.8px; }
     .panel-grid { display: grid; grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr); gap: 18px; align-items: start; }
-    .panel { min-width: 0; padding: 22px; border: 1px solid #e9eef5; border-radius: 16px; background: #fff; box-shadow: 0 4px 18px rgba(25, 48, 70, .04); }
+    .panel { min-width: 0; padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 4px 18px rgba(25, 48, 70, .04); }
     .panel-top { min-height: 85px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
     .panel-heading { min-width: 0; display: flex; align-items: flex-start; gap: 12px; }
     .icon { width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center; border-radius: 13px; background: #eaf3f8; color: #006b8f; }
     .icon.green { background: #e7f4ef; color: var(--green); }
     .icon svg { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .panel h2 { margin: 0 0 5px; font: 800 clamp(18px, 1.7vw, 24px)/1.24 "Plus Jakarta Sans", sans-serif; letter-spacing: -.025em; }
+    .panel h2 { margin: 0 0 5px; font: 800 clamp(18px, 1.7vw, 24px)/1.24 var(--font); letter-spacing: -.025em; }
     .panel-subtitle { margin: 0; color: #4b5c58; font-size: 13px; line-height: 1.5; }
     .preview-badge { flex: 0 0 auto; margin-top: 5px; padding: 7px 11px; border-radius: 8px; background: #e8f5ef; color: var(--green-dark); font-size: 12px; font-weight: 700; }
     .receipt-summary { display: flex; align-items: center; gap: 14px; margin: 23px 0 19px; padding: 15px; border-radius: 15px; background: var(--blue); }
-    .receipt-icon { width: 58px; height: 58px; flex: 0 0 58px; display: grid; place-items: center; border-radius: 12px; background: #dce9ff; color: var(--green); font-size: 28px; }
+    .receipt-icon { width: 58px; height: 58px; flex: 0 0 58px; display: grid; place-items: center; border-radius: 12px; background: var(--line); color: var(--green); font-size: 28px; }
     .receipt-copy { min-width: 0; flex: 1; }
     .receipt-copy strong { display: block; overflow-wrap: anywhere; font-size: 14px; }
     .receipt-copy p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
     .receipt-count { align-self: flex-start; flex: 0 0 auto; color: var(--green); font-size: 12px; font-weight: 800; white-space: nowrap; }
-    .button { min-height: 41px; display: inline-flex; justify-content: center; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid #d7e2e8; border-radius: 10px; background: #fff; color: var(--ink); font-size: 13px; font-weight: 700; }
+    .button { min-height: 41px; display: inline-flex; justify-content: center; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); font-size: 13px; font-weight: 700; }
     .button:disabled { opacity: .72; }
     .button.primary { border-color: var(--green); background: var(--green); color: #fff; box-shadow: 0 5px 12px rgba(0, 116, 82, .12); }
-    .button.secondary { border-color: #d6e5ff; background: #dce9ff; }
-    .table-wrap { overflow-x: auto; border: 1px solid #e2e9f4; border-radius: 14px; }
+    .button.secondary { border-color: var(--line); background: var(--line); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
     table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; }
     thead { background: var(--blue); }
     th, td { padding: 13px 15px; border-bottom: 1px solid var(--line); font-size: 13px; }
@@ -71,60 +48,114 @@
     .draft-table th:nth-child(2) { min-width: 82px; }
     .draft-table th:nth-child(3) { min-width: 110px; }
     .draft-table th:nth-child(4) { min-width: 80px; }
-    .draft-table input, .draft-table select { width: 100%; height: 36px; padding: 5px 7px; border: 1px solid #cbd9e4; border-radius: 7px; background: #fff; color: var(--ink); font-size: 12px; }
+    .draft-table input, .draft-table select { width: 100%; height: 36px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--ink); font-size: 12px; }
     .draft-table input:focus, .draft-table select:focus { outline: 2px solid #91d9b8; }
     .draft-table .remove-row { min-height: 34px; padding: 5px 9px; border: 1px solid #eed5d5; border-radius: 7px; background: #fff8f8; color: #9a3131; cursor: pointer; }
-    .name-suggestion { margin-top: 7px; color: #4d645e; font-size: 11px; line-height: 1.4; }
+    .name-suggestion { margin-top: 7px; color: #4d645e; font-size:12px; line-height: 1.4; }
     .draft-table .confirm-name { width: auto; height: auto; margin-right: 3px; vertical-align: middle; }
-    .empty-draft { display: grid; justify-items: center; gap: 8px; padding: 36px 18px; border: 1px dashed #c9d9e7; border-radius: 14px; background: #f8fbff; color: #667782; text-align: center; font-size: 13px; line-height: 1.5; }
+    .empty-draft { display: grid; justify-items: center; gap: 8px; padding: 36px 18px; border: 1px dashed var(--line); border-radius: 14px; background: var(--soft); color: #667782; text-align: center; font-size: 13px; line-height: 1.5; }
     .empty-draft-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: #e4f4ed; color: var(--green); font-size: 24px; }
     .empty-draft p { max-width: 360px; margin: 0; }
-    .sample-note { margin: 10px 0 0; color: #68767e; font-size: 11px; }
+    .sample-note { margin: 10px 0 0; color: #68767e; font-size:12px; }
     .feedback { min-height: 18px; margin: 11px 0 0; color: var(--green-dark); font-size: 12px; font-weight: 600; line-height: 1.5; }
     .feedback.error { color: #a43d32; }
     .scan-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
     .scan-controls input[type="file"] { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     .scan-controls input[type="file"]:focus-visible + label { outline: 3px solid #91d9b8; outline-offset: 3px; }
     .receipt-date { display: grid; gap: 5px; color: #4b5b5b; font-size: 12px; font-weight: 700; }
-    .receipt-date input { height: 41px; padding: 7px 10px; border: 1px solid #cbd9e4; border-radius: 9px; background: #fff; color: var(--ink); }
+    .receipt-date input { height: 41px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); }
     .receipt-preview { display: block; max-width: 100%; max-height: 260px; margin: 14px auto; border: 1px solid var(--line); border-radius: 9px; object-fit: contain; }
     .panel-footer { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
     .total-label { color: #53615f; font-size: 12px; font-weight: 700; }
-    .total-value { display: block; margin-top: 2px; font: 800 23px "Plus Jakarta Sans", sans-serif; }
+    .total-value { display: block; margin-top: 2px; font: 800 23px var(--font); }
     .footer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-    .manual-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 12px; margin-top: 20px; padding: 20px; border: 1px solid #d8e6ff; border-radius: 16px; background: var(--blue); }
+    .manual-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 12px; margin-top: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--blue); }
     .manual-panel .panel-top { min-height: 0; }
     .manual-panel .panel-footer { justify-content: flex-end; margin-top: 20px; }
     #manual-feedback:empty { display: none; }
     .field { min-width: 0; }
     .field.full { grid-column: 1 / -1; }
     .field label { display: block; margin-bottom: 6px; color: #394a49; font-size: 12px; font-weight: 700; }
-    .field input, .field select { width: 100%; height: 42px; padding: 0 11px; border: 1px solid #bed0c7; border-radius: 9px; background: #fff; color: var(--ink); font-size: 13px; outline: none; }
+    .field input, .field select { width: 100%; height: 42px; padding: 0 11px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); font-size: 13px; outline: none; }
     .field input::placeholder { color: #9aa6b3; }
     .field input:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px #d5f2e5; }
     #ingredient-quantity { appearance: textfield; -moz-appearance: textfield; }
     #ingredient-quantity::-webkit-inner-spin-button, #ingredient-quantity::-webkit-outer-spin-button { margin: 0; -webkit-appearance: none; }
     .pantry-list { margin-top: 20px; }
-    .pantry-list h2 { margin: 0 0 14px; font: 800 20px "Plus Jakarta Sans", sans-serif; }
+    .pantry-list h2 { margin: 0 0 14px; font: 800 20px var(--font); }
     .pantry-list .sample-note { margin: 0 0 12px; line-height: 1.5; }
-    .saved-table { min-width: 980px; table-layout: fixed; }
-    .saved-table th, .saved-table td { text-align: left; vertical-align: top; }
-    .saved-table th:last-child, .saved-table td:last-child { text-align: left; }
-    .pantry-value { min-height: 37px; display: flex; align-items: center; line-height: 1.4; overflow-wrap: anywhere; }
-    .saved-table select, .saved-table input { width: 100%; min-width: 0; height: 37px; padding: 6px 9px; border: 1px solid #cbd9e4; border-radius: 8px; background: #fff; color: var(--ink); font-size: 12px; margin-bottom: 5px; }
-    .saved-table details { color: var(--muted); font-size: 11px; }
-    .saved-table details label { display: block; margin-top: 8px; }
-    .saved-table small { display: block; color: var(--muted); font-size: 10px; line-height: 1.45; }
-    #stock-recipes-title { font: 800 20px "Plus Jakarta Sans", sans-serif; }
-    #stock-recipe-servings { width: 64px; padding: 9px; border: 1px solid #cbd9e4; border-radius: 8px; margin: 0 8px 12px; }
-    .saved-table .button { min-height: 37px; padding-inline: 10px; white-space: nowrap; }
-    .pantry-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .saved-table .button.danger { margin-top: 0; border-color: #efcece; color: #9a3131; }
-    .row-feedback { display: block; margin-top: 5px; color: var(--green-dark); font-size: 11px; }
+    .pantry-list h2 { margin: 0 0 14px; font: 800 20px var(--font); }
+    .pantry-list .sample-note { margin: 0 0 12px; line-height: 1.5; }
+    #stock-recipes-title { font: 800 20px var(--font); }
+    #stock-recipe-servings { width: 64px; padding: 9px; border: 1px solid var(--line); border-radius: 8px; margin: 0 8px 12px; }
+    .saved-empty { padding: 20px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); background: #fff; font-size: 13px; }
+    .row-feedback { display: block; margin-top: 5px; color: var(--green-dark); font-size: 12.5px; }
     .row-feedback.error { color: #a43d32; }
-    .storage-feedback { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; }
-    .saved-empty { padding: 20px; border: 1px dashed #cad7e3; border-radius: 12px; color: var(--muted); background: #fff; font-size: 13px; }
+    .storage-feedback { display: block; margin-top: 5px; color: var(--muted); font-size: 12.5px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; }
     [hidden] { display: none !important; }
+    /* Shared look + phone layout: stock rows become cards instead of a sideways-scrolling table. */
+    .page { max-width: 1160px; padding: 32px clamp(16px, 4vw, 32px) 72px; }
+    .page-intro .lead { margin: 6px 0 0; max-width: 640px; color: var(--muted); }
+    h1 { font-size: clamp(26px, 3.4vw, 34px); letter-spacing: -.02em; }
+    .eyebrow { font-size: 12px; }
+    .button { min-height: 44px; font-size: 14px; }
+    .button.secondary { border-color: var(--line); background: var(--surface); color: var(--green-dark); }
+    .panel-subtitle, .receipt-copy p, .sample-note, .feedback { font-size: 13px; }
+    .field label, .receipt-date { font-size: 13px; }
+    .field input, .field select, .receipt-date input { height: 46px; font-size: 15px; }
+    .receipt-icon, .empty-draft-icon { font-size: 0; }
+    .receipt-icon::before, .empty-draft-icon::before { content: ""; width: 26px; height: 26px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3h12v17l-2-1-2 1-2-1-2 1-2-1-2 1z'/%3E%3Cpath d='M9 8h6M9 12h6M9 16h4'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3h12v17l-2-1-2 1-2-1-2 1-2-1-2 1z'/%3E%3Cpath d='M9 8h6M9 12h6M9 16h4'/%3E%3C/svg%3E") center / contain no-repeat; }
+    .receipt-icon, .empty-draft-icon { background: var(--green-soft); color: var(--green); }
+    .manual-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .manual-fields .field:nth-child(2) { grid-column: 1 / -1; }
+    .used-up { margin-top: 16px; font-size: 14px; }
+    .used-up summary { min-height: 44px; display: flex; align-items: center; color: var(--green-dark); font-weight: 700; cursor: pointer; }
+    @media (max-width: 650px) {
+      .receipt-summary { flex-wrap: nowrap; }
+      .receipt-copy { flex: 1 1 auto; }
+      .receipt-count { margin-left: 0; }
+      .receipt-icon { width: 44px; height: 44px; flex-basis: 44px; }
+    }
+    .panel-grid { grid-template-columns: 1fr; margin-bottom: 18px; }
+    .stock-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+    .stock-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .chip-count { margin-left: 6px; font-weight: 800; }
+    .stock-table { display: block; width: 100%; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+    .stock-table thead, .stock-table tbody { display: block; }
+    .stock-row { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr) 110px; align-items: center; column-gap: 12px; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+    .stock-table tbody .stock-row:last-child { border-bottom: 0; }
+    .stock-head { background: var(--soft); color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .stock-head th { padding: 10px 0; border: 0; font: inherit; text-align: left; }
+    .stock-row > td { min-width: 0; padding: 0; border: 0; background: transparent; font-size: 14px; }
+    .stock-name { display: flex; align-items: center; gap: 10px; font-weight: 700; overflow-wrap: anywhere; }
+    .stock-name::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--green-line); }
+    .stock-row[data-group="expired"] .stock-name::before { background: var(--bad); }
+    .stock-row[data-group="soon"] .stock-name::before { background: #e08a1e; }
+    .stock-row[data-group="unknown"] .stock-name::before { background: var(--unknown); }
+    .stock-qty, .stock-location { color: var(--muted); }
+    .stock-toggle { justify-self: end; }
+    .stock-row > td.edit-cell { grid-column: 1 / -1; }
+    .edit-panel { margin: 8px 0 6px; padding: 16px; border-radius: var(--radius-sm); background: var(--canvas); }
+    .edit-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .edit-fields label { display: block; min-width: 0; color: var(--muted); font-size: 12.5px; font-weight: 700; }
+    .edit-fields input, .edit-fields select { display: block; width: 100%; min-width: 0; height: 44px; margin: 4px 0 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font-size: 14px; }
+    .edit-fields .wide { grid-column: 1 / -1; }
+    .edit-fields details { color: var(--muted); font-size: 12.5px; }
+    .edit-fields details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+    .edit-fields small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+    .pantry-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+    .pantry-actions .button.danger { border-color: #efcece; color: #9a3131; }
+    #stock-filter-empty { padding: 20px; border: 1px dashed var(--line); border-radius: 12px; background: #fff; color: var(--muted); }
+    @media (max-width: 760px) {
+      .stock-head { display: none; }
+      .stock-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; padding: 12px 14px; }
+      .stock-row .stock-name { grid-column: 1 / -1; }
+      .stock-row .stock-toggle { grid-row: 2; grid-column: 2; }
+      .stock-qty, .stock-location { font-size: 14px; }
+      .stock-expiry { justify-self: start; }
+      .edit-fields { grid-template-columns: 1fr; }
+      .pantry-actions .button { flex: 1 1 30%; }
+    }
     @media (max-width: 1120px) {
       .panel-grid { grid-template-columns: 1fr; }
     }
@@ -138,7 +169,7 @@
       .manual-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 16px; }
       .manual-fields .field:nth-child(2) { grid-column: 1 / -1; }
       .footer-actions, .footer-actions .button { width: 100%; }
-      th, td { padding: 11px 9px; font-size: 11px; }
+      th, td { padding: 11px 9px; font-size:12px; }
       .draft-table th, .draft-table td { padding: 8px 6px; }
     }
     @media (max-width: 410px) {
@@ -148,20 +179,22 @@
     }
   </style>
 </head>
-<body>
-  <header class="site-header">
-    <a class="brand" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}"><span class="brand-mark" aria-hidden="true">✳</span> TAKARKUY</a>
-    <a class="back-link" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}">← Kembali ke beranda</a>
-  </header>
+<body class="{% if user.is_authenticated %}has-app-nav{% endif %}">
+  {% include "partials/app_header.html" %}
 
-  <main class="page">
+  <main id="main" class="page">
     <div class="page-intro">
-      <p class="eyebrow">DAPUR SAYA</p>
-      <h1>Kelola Stok Dapur</h1>
+      <p class="eyebrow">PANTRY</p>
+      <h1>Stok Dapur</h1>
+      <p class="lead">Tambah bahan dari struk atau manual. Bahan yang paling cepat kedaluwarsa dipakai lebih dulu saat memasak.</p>
     </div>
 
+    <div class="stock-toolbar">
+      <button id="open-scan" class="btn btn-primary" type="button" aria-expanded="false" aria-controls="scan-panel">Pindai struk</button>
+      <button id="open-manual" class="btn btn-secondary" type="button" aria-expanded="false" aria-controls="manual-panel">Tambah manual</button>
+    </div>
     <div class="panel-grid">
-      <section class="panel" aria-labelledby="scan-title">
+      <section class="panel" id="scan-panel" aria-labelledby="scan-title" hidden>
         <div class="panel-top">
           <div class="panel-heading">
             <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v17l-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
@@ -177,7 +210,7 @@
         </div>
         <div class="scan-controls">
           <input id="receipt-file" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" aria-label="Foto struk belanja" data-gemini-fallback="{{ gemini_receipt_fallback|yesno:'true,false' }}">
-          <label class="button primary" for="receipt-file">📷 Unggah Struk Belanja</label>
+          <label class="button primary" for="receipt-file"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Unggah Struk Belanja</label>
           <label class="receipt-date" for="receipt-date">Tanggal belanja / mulai simpan (opsional)<input id="receipt-date" type="date" max="{{ today|date:'Y-m-d' }}"></label>
         </div>
         <img id="receipt-preview" class="receipt-preview" alt="Foto struk yang dipilih" hidden>
@@ -191,14 +224,14 @@
             <tbody id="draft-rows"></tbody>
           </table>
         </div>
-        <p class="sample-note">💡 Periksa kembali nama dan jumlah bahan sebelum disimpan ke pantry.</p>
+        <p class="sample-note">Periksa kembali nama dan jumlah bahan sebelum disimpan ke pantry.</p>
         <div class="panel-footer">
           <div><span class="total-label">Baris siap diperiksa</span><strong id="draft-count" class="total-value">0 bahan</strong></div>
           <div class="footer-actions"><button id="add-draft-row" class="button secondary" type="button">+ Tambah Baris</button><button id="save-draft" class="button primary" type="button">Simpan ke Pantry</button></div>
         </div>
       </section>
 
-      <section class="panel manual-panel" aria-labelledby="manual-title">
+      <section class="panel manual-panel" id="manual-panel" aria-labelledby="manual-title" hidden>
         <div class="panel-top">
           <div class="panel-heading">
             <span class="icon green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6h10M5 10h10M5 14h7"/><path d="m14 18 5-5 2 2-5 5-3 1z"/></svg></span>
@@ -229,18 +262,41 @@
       <h2 id="pantry-title">Stok Pantry Saat Ini</h2>
       <p class="sample-note">Lokasi awal: suhu ruang. Perkiraan mengikuti lokasi dan tanggal belanja/ditambahkan, bukan jaminan keamanan. Bahan mudah rusak perlu segera disimpan dingin; pindah ke kulkas tidak membuat bahan kembali segar.</p>
       {% if pantry_items %}
-      <div class="table-wrap"><table class="saved-table"><colgroup><col style="width:14%"><col style="width:12%"><col style="width:17%"><col style="width:18%"><col style="width:21%"><col style="width:18%"></colgroup><thead><tr><th scope="col">Bahan</th><th scope="col">Jumlah</th><th scope="col">Kategori</th><th scope="col">Lokasi Simpan</th><th scope="col">Perkiraan kedaluwarsa</th><th scope="col">Aksi</th></tr></thead><tbody>
+      <div class="stock-filters" role="group" aria-label="Filter stok">
+        <button class="chip" type="button" data-filter="all" aria-pressed="true">Semua<span class="chip-count">{{ stock_counts.all }}</span></button>
+        <button class="chip" type="button" data-filter="soon" aria-pressed="false">Segera / lewat<span class="chip-count">{{ stock_counts.soon }}</span></button>
+        <button class="chip" type="button" data-filter="kulkas" aria-pressed="false">Kulkas<span class="chip-count">{{ stock_counts.chiller }}</span></button>
+        <button class="chip" type="button" data-filter="freezer" aria-pressed="false">Freezer<span class="chip-count">{{ stock_counts.freezer }}</span></button>
+        <button class="chip" type="button" data-filter="suhu_ruang" aria-pressed="false">Suhu ruang<span class="chip-count">{{ stock_counts.suhu_ruang }}</span></button>
+        <button class="chip" type="button" data-filter="unknown" aria-pressed="false">Tgl ?<span class="chip-count">{{ stock_counts.unknown }}</span></button>
+      </div>
+      <table class="stock-table" role="table"><thead><tr class="stock-row stock-head" role="row"><th scope="col" role="columnheader">Bahan</th><th scope="col" role="columnheader">Jumlah</th><th scope="col" role="columnheader">Lokasi</th><th scope="col" role="columnheader">Kedaluwarsa</th><th scope="col" role="columnheader"><span class="sr-only">Aksi</span></th></tr></thead><tbody>
         {% for item in pantry_items %}
-        <tr data-pantry-item="{{ item.pk }}" data-version="{{ item.version }}">
-          <td><input data-edit-name aria-label="Nama bahan" value="{{ item.name }}" maxlength="255"><details><summary>Konversi untuk resep</summary><label>Bahan katalog<select data-edit-ingredient><option value="">Belum terhubung</option>{% for ingredient in ingredients %}<option value="{{ ingredient.pk }}"{% if item.ingredient_id == ingredient.pk %} selected{% endif %}>{{ ingredient.name }}</option>{% endfor %}</select></label><label>Berat per 1 satuan (g, opsional)<input data-edit-weight inputmode="decimal" value="{{ item.pack_weight_g|default_if_none:''|unlocalize }}" aria-label="Berat per unit"></label><small>{{ item.conversion_note }}</small></details></td>
-          <td><input data-edit-quantity inputmode="decimal" value="{{ item.quantity|floatformat:'-6u' }}" aria-label="Jumlah"><select data-edit-unit aria-label="Satuan">{% for value, label in manual_unit_choices %}<option value="{{ value }}"{% if item.unit == value %} selected{% endif %}>{{ label }}</option>{% endfor %}{% if item.unit == "papan" or item.unit == "kotak" or item.unit == "pak" or item.unit == "bungkus" %}<option value="{{ item.unit }}" selected>{{ item.get_unit_display }}</option>{% endif %}</select></td>
-          <td><select data-edit-category aria-label="Kategori"><option value="">Belum ditentukan</option>{% for value, label in category_choices %}<option value="{{ value }}"{% if item.category == value %} selected{% endif %}>{{ label }}</option>{% endfor %}{% if item.category and item.category not in "sayur_buah,daging_seafood,tahu_tempe_kacang,beras_karbohidrat,bumbu_minyak,lainnya" %}<option value="{{ item.category }}" selected>{{ item.get_category_display }}</option>{% endif %}</select></td>
-          <td><select data-pantry-location aria-label="Lokasi simpan {{ item.name }}">{% for value, label in location_choices %}<option value="{{ value }}"{% if item.display_location == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></td>
-          <td><input type="date" data-pantry-expiry value="{{ item.estimated_expires_on|date:'Y-m-d' }}" aria-label="Perkiraan kedaluwarsa {{ item.name }}"><select data-expiry-source aria-label="Sumber tanggal kedaluwarsa">{% for value, label in expiry_choices %}<option value="{{ value }}"{% if item.expiry_source == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>{% if item.expiry_status %}<small>{{ item.expiry_status }}</small>{% endif %}<span class="storage-feedback" data-storage-feedback>{{ item.storage_message }}</span></td>
-          <td><div class="pantry-actions"><button type="button" class="button save-pantry-details">Simpan</button><button type="button" class="button danger delete-pantry-item" data-item-name="{{ item.name }}">Hapus</button><button type="button" class="button pantry-history">Riwayat</button></div><div data-history-output hidden></div><span class="row-feedback" role="status" aria-live="polite"></span></td>
+        <tr class="stock-row" role="row" data-pantry-item="{{ item.pk }}" data-version="{{ item.version }}" data-group="{{ item.stock_group }}" data-location="{{ item.display_location }}">
+          <td role="cell" class="stock-name"><span class="stock-name-text">{{ item.name }}</span></td>
+          <td role="cell" class="stock-qty">{{ item.quantity|floatformat:'-6u' }} {{ item.get_unit_display }}</td>
+          <td role="cell" class="stock-location">{% for value, label in location_choices %}{% if item.display_location == value %}{{ label }}{% endif %}{% endfor %}</td>
+          <td role="cell"><span class="pill stock-expiry {% if item.stock_group == 'expired' %}pill-bad{% elif item.stock_group == 'soon' %}pill-warn{% elif item.stock_group == 'ok' %}pill-ok{% else %}pill-unknown{% endif %}">{{ item.expiry_label }}</span></td>
+          <td role="cell" class="stock-toggle"><button type="button" class="btn btn-secondary toggle-edit" aria-expanded="false" aria-controls="edit-{{ item.pk }}" aria-label="Ubah {{ item.name }}">Ubah</button></td>
+          <td role="cell" class="edit-cell"><div class="edit-panel" id="edit-{{ item.pk }}" hidden>
+            <div class="edit-fields">
+              <label class="wide">Nama bahan<input data-edit-name aria-label="Nama bahan" value="{{ item.name }}" maxlength="255"></label>
+              <label>Jumlah<input data-edit-quantity inputmode="decimal" value="{{ item.quantity|floatformat:'-6u' }}" aria-label="Jumlah"></label>
+              <label>Satuan<select data-edit-unit aria-label="Satuan">{% for value, label in manual_unit_choices %}<option value="{{ value }}"{% if item.unit == value %} selected{% endif %}>{{ label }}</option>{% endfor %}{% if item.unit == "papan" or item.unit == "kotak" or item.unit == "pak" or item.unit == "bungkus" %}<option value="{{ item.unit }}" selected>{{ item.get_unit_display }}</option>{% endif %}</select></label>
+              <label>Kategori<select data-edit-category aria-label="Kategori"><option value="">Belum ditentukan</option>{% for value, label in category_choices %}<option value="{{ value }}"{% if item.category == value %} selected{% endif %}>{{ label }}</option>{% endfor %}{% if item.category and item.category not in "sayur_buah,daging_seafood,tahu_tempe_kacang,beras_karbohidrat,bumbu_minyak,lainnya" %}<option value="{{ item.category }}" selected>{{ item.get_category_display }}</option>{% endif %}</select></label>
+              <label>Lokasi simpan<select data-pantry-location aria-label="Lokasi simpan {{ item.name }}">{% for value, label in location_choices %}<option value="{{ value }}"{% if item.display_location == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+              <label>Perkiraan kedaluwarsa<input type="date" data-pantry-expiry value="{{ item.estimated_expires_on|date:'Y-m-d' }}" aria-label="Perkiraan kedaluwarsa {{ item.name }}"></label>
+              <label>Sumber tanggal<select data-expiry-source aria-label="Sumber tanggal kedaluwarsa">{% for value, label in expiry_choices %}<option value="{{ value }}"{% if item.expiry_source == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+              <div class="wide">{% if item.expiry_status %}<small>{{ item.expiry_status }}</small>{% endif %}<span class="storage-feedback" data-storage-feedback>{{ item.storage_message }}</span></div>
+              <details class="wide"><summary>Konversi untuk resep</summary><label>Bahan katalog<select data-edit-ingredient><option value="">Belum terhubung</option>{% for ingredient in ingredients %}<option value="{{ ingredient.pk }}"{% if item.ingredient_id == ingredient.pk %} selected{% endif %}>{{ ingredient.name }}</option>{% endfor %}</select></label><label>Berat per 1 satuan (g, opsional)<input data-edit-weight inputmode="decimal" value="{{ item.pack_weight_g|default_if_none:''|unlocalize }}" aria-label="Berat per unit"></label><small>{{ item.conversion_note }}</small></details>
+            </div>
+            <div class="pantry-actions"><button type="button" class="button primary save-pantry-details">Simpan</button><button type="button" class="button danger delete-pantry-item" data-item-name="{{ item.name }}">Hapus</button><button type="button" class="button pantry-history">Riwayat</button></div>
+            <div data-history-output hidden></div><span class="row-feedback" role="status" aria-live="polite"></span>
+          </div></td>
         </tr>
         {% endfor %}
-      </tbody></table></div>
+      </tbody></table>
+      <p id="stock-filter-empty" hidden>Tidak ada bahan untuk filter ini.</p>
       {% else %}<p class="saved-empty">Belum ada bahan tersimpan. Pindai struk atau masukkan bahan secara manual.</p>{% endif %}
       {% if used_up_items %}<details class="used-up"><summary>Stok habis (30 hari terakhir) · {{ used_up_items|length }}</summary><ul>{% for item in used_up_items %}<li><strong>{{ item.name }}</strong> · habis {{ item.updated_at|date:"d M Y" }}<ul>{% for move in item.movements.all %}<li>{{ move.created_at|date:"d M Y, H:i" }} · {{ move.get_kind_display }}: {{ move.quantity_before|floatformat:"-2" }} → {{ move.quantity_after|floatformat:"-2" }}</li>{% endfor %}</ul></li>{% endfor %}</ul></details>{% endif %}
     </section>

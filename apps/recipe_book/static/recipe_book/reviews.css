@@ -26,7 +26,7 @@
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #f4f6ff;
+  background: var(--soft);
   color: var(--ink);
   font: inherit;
   font-weight: 400;

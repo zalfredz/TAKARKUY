@@ -71,6 +71,9 @@ def _session_id(request):
     return scope
 
 
+_MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
+
+
 @login_required
 def pantry_page(request):
     session_id = _session_id(request)
@@ -109,6 +112,19 @@ def pantry_page(request):
             if remaining is not None and remaining <= 2
             else ""
         )
+        if expiry is None or item.expiry_source == "unknown":
+            item.stock_group, item.expiry_label = "unknown", "Tgl ?"
+        elif remaining < 0:
+            item.stock_group, item.expiry_label = "expired", "Lewat"
+        else:
+            item.stock_group = "soon" if remaining <= 2 else "ok"
+            item.expiry_label = (
+                "Hari ini"
+                if remaining == 0
+                else f"{remaining} hari"
+                if remaining <= 30
+                else f"{expiry.day} {_MONTHS[expiry.month - 1]}"
+            )
         estimates[str(item.pk)] = {
             "location": location,
             "options": {
@@ -116,11 +132,21 @@ def pantry_page(request):
                 for key, _ in PantryItem.LOCATION_CHOICES
             },
         }
+    counts = {
+        "all": len(items),
+        "soon": sum(item.stock_group in ("soon", "expired") for item in items),
+        "unknown": sum(item.stock_group == "unknown" for item in items),
+        **{
+            key: sum(item.display_location == key for item in items)
+            for key, _ in PantryItem.LOCATION_CHOICES
+        },
+    }
     return render(
         request,
         "pantry.html",
         {
             "pantry_items": items,
+            "stock_counts": counts,
             # Used-up batches leave the list but keep their ledger readable for a while.
             "used_up_items": PantryItem.objects.filter(
                 user=request.user,
